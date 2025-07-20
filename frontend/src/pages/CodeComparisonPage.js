@@ -589,9 +589,8 @@ const CodeComparisonPage = () => {
         </TabsContent>
 
         <TabsContent value="comparison" className="space-y-4">
-
-      {/* File Details */}
-      {selectedFile && mockFixedFiles[selectedFile] && (
+        {/* File Details */}
+        {selectedFile && mockFixedFiles[selectedFile] && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
