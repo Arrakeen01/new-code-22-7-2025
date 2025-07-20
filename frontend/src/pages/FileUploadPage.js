@@ -33,7 +33,7 @@ const FileUploadPage = () => {
   const [validationErrors, setValidationErrors] = useState([]);
 
   // File type configurations
-  const codeFileTypes = [".js", ".jsx", ".ts", ".tsx", ".py", ".java", ".cpp", ".c", ".php", ".rb", ".go", ".rs", ".swift", ".kt"];
+  const codeFileTypes = [".js", ".jsx", ".ts", ".tsx", ".py", ".java", ".cpp", ".c", ".php", ".rb", ".go", ".rs", ".swift", ".kt", ".zip", ".rar", ".tar.gz"];
   const srsFileTypes = [".pdf", ".doc", ".docx", ".md", ".txt"];
   const maxFileSize = 50 * 1024 * 1024; // 50MB
   const maxCodeFiles = 100;
