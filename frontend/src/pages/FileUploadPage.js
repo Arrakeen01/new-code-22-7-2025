@@ -510,27 +510,38 @@ const FileUploadPage = () => {
         </Card>
       </div>
 
-      {/* Action Button */}
-      <div className="text-center">
+      {/* Action Buttons */}
+      <div className="flex justify-center space-x-4">
+        {(uploadedFiles.codeFiles.length > 0 || uploadedFiles.srsFiles.length > 0) && (
+          <Button
+            onClick={downloadFilesAsZip}
+            variant="outline"
+            className="px-6 py-2"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Download All Files
+          </Button>
+        )}
+        
         <Button
           onClick={proceedToAnalysis}
           disabled={!canProceed}
-          size="lg"
-          className={`px-8 py-3 text-lg font-semibold transition-all duration-300 transform ${
+          className={`px-6 py-2 ${
             canProceed
-              ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg hover:scale-105 shadow-md"
+              ? "bg-blue-600 hover:bg-blue-700 text-white"
               : "opacity-50 cursor-not-allowed"
           }`}
         >
-          Proceed to Analysis
-          <ArrowRight className="ml-2 h-5 w-5" />
+          Start Analysis
+          <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
-        {!canProceed && (
-          <p className="mt-2 text-sm text-muted-foreground">
-            Please upload both source code and SRS documents to continue
-          </p>
-        )}
       </div>
+      
+      {!canProceed && uploadedFiles.codeFiles.length === 0 && (
+        <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+          Upload both code files and SRS documents to begin analysis
+        </p>
+      )}
     </div>
   );
 };
