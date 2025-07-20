@@ -372,10 +372,10 @@ const CodeComparisonPage = () => {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {Math.round((reviewStats.acceptedChanges + reviewStats.rejectedChanges) / reviewStats.totalChanges * 100) || 0}%
               </div>
-              <div className="text-sm text-muted-foreground">Complete</div>
+              <div className="text-sm text-slate-600 dark:text-slate-400">Complete</div>
             </div>
           </div>
         </CardHeader>
