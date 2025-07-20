@@ -182,6 +182,16 @@ const FileUploadPage = () => {
     return null;
   };
 
+  // Read file content
+  const readFileContent = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+  };
+
   // Remove file
   const removeFile = (fileId, type) => {
     const fileType = type === "code" ? "codeFiles" : "srsFiles";
