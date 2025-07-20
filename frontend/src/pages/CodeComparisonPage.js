@@ -185,6 +185,75 @@ const CodeComparisonPage = () => {
     });
   };
 
+  // Download files as zip
+  const downloadFilesAsZip = async () => {
+    if (!uploadedFiles?.codeFiles?.length && !uploadedFiles?.srsFiles?.length) {
+      toast({
+        title: "No Files to Download",
+        description: "No files available for download",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Create a session ID if not exists
+      const sessionId = "temp_session_" + Date.now();
+      
+      // Create download URL
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const downloadUrl = `${backendUrl}/api/files/download-zip/${sessionId}`;
+      
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `reviewed_files_${sessionId}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Download Started",
+        description: "Your reviewed files are being downloaded as a zip file",
+      });
+    } catch (error) {
+      toast({
+        title: "Download Failed", 
+        description: "Could not download files. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // File editor functions
+  const handleFileChange = (fileId, content) => {
+    const updatedFiles = uploadedFiles.codeFiles.map(file => 
+      file.id === fileId ? { ...file, content } : file
+    );
+    dispatch({
+      type: "SET_UPLOADED_FILES",
+      payload: { ...uploadedFiles, codeFiles: updatedFiles }
+    });
+  };
+
+  const handleFileCreate = (fileName) => {
+    const newFile = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: fileName,
+      content: "// New file\n",
+      size: 12,
+      type: "text/plain"
+    };
+    
+    dispatch({
+      type: "SET_UPLOADED_FILES", 
+      payload: { 
+        ...uploadedFiles, 
+        codeFiles: [...(uploadedFiles.codeFiles || []), newFile] 
+      }
+    });
+  };
+
   const renderSideBySideView = (file) => {
     const originalLines = file.original.split('\n');
     const modifiedLines = file.modified.split('\n');
