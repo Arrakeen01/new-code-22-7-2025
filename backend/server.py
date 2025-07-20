@@ -96,14 +96,48 @@ async def upload_file(request: FileUploadRequest, session_id: str):
         print(f"Upload error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/files/session/{session_id}")
-async def get_session_files(session_id: str):
-    """Get all files for a session"""
-    files = await files_collection.find({"session_id": session_id}).to_list(1000)
-    return {
-        "files": files,
-        "stats": FileProcessor.get_file_stats([UploadedFile(**f) for f in files])
-    }
+@api_router.get("/files/download-zip/{session_id}")
+async def download_files_as_zip(session_id: str):
+    """Download all files for a session as a zip file"""
+    try:
+        import zipfile
+        import io
+        from fastapi.responses import StreamingResponse
+        
+        # Get all files for session
+        files = await files_collection.find({"session_id": session_id}).to_list(1000)
+        
+        if not files:
+            raise HTTPException(status_code=404, detail="No files found for this session")
+        
+        # Create zip file in memory
+        zip_buffer = io.BytesIO()
+        
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for file_doc in files:
+                if file_doc.get('content'):
+                    # Add file content to zip
+                    zip_file.writestr(file_doc['name'], file_doc['content'])
+        
+        zip_buffer.seek(0)
+        
+        # Return zip file as streaming response
+        def iterfile():
+            yield zip_buffer.read()
+        
+        headers = {
+            'Content-Disposition': f'attachment; filename="session_{session_id}_files.zip"'
+        }
+        
+        return StreamingResponse(
+            iter([zip_buffer.getvalue()]),
+            media_type="application/zip",
+            headers=headers
+        )
+        
+    except Exception as e:
+        print(f"Zip download error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/analysis/generate-checklist", response_model=ChecklistResponse)
 async def generate_checklist(session_id: str, model: str = "gpt-4o"):
