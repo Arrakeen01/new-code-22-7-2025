@@ -67,13 +67,8 @@ const CodeValidationPage = () => {
   ];
 
   useEffect(() => {
-    if (uploadedFiles.codeFiles.length === 0 || uploadedFiles.srsFiles.length === 0) {
-      navigate("/");
-      return;
-    }
-
     // Generate checklist if not already done
-    if (checklist.length === 0) {
+    if (checklist.length === 0 && uploadedFiles.srsFiles.length > 0) {
       const generatedChecklist = generateMockChecklist(uploadedFiles.srsFiles);
       dispatch({ type: "SET_CHECKLIST", payload: generatedChecklist });
     }
