@@ -1,0 +1,502 @@
+import React, { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Progress } from "../components/ui/progress";
+import { Badge } from "../components/ui/badge";
+import { Separator } from "../components/ui/separator";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { useToast } from "../hooks/use-toast";
+import { useCodeReview } from "../contexts/CodeReviewContext";
+import {
+  Upload,
+  File,
+  FileText,
+  FolderOpen,
+  X,
+  CheckCircle,
+  AlertCircle,
+  ArrowRight,
+  Code2,
+  FileCode,
+  Archive
+} from "lucide-react";
+
+const FileUploadPage = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { uploadedFiles, dispatch } = useCodeReview();
+  
+  const [dragActive, setDragActive] = useState({ code: false, srs: false });
+  const [uploadProgress, setUploadProgress] = useState({});
+  const [validationErrors, setValidationErrors] = useState([]);
+
+  // File type configurations
+  const codeFileTypes = [".js", ".jsx", ".ts", ".tsx", ".py", ".java", ".cpp", ".c", ".php", ".rb", ".go", ".rs", ".swift", ".kt"];
+  const srsFileTypes = [".pdf", ".doc", ".docx", ".md", ".txt"];
+  const maxFileSize = 50 * 1024 * 1024; // 50MB
+  const maxCodeFiles = 100;
+  const maxSrsFiles = 10;
+
+  // Drag and drop handlers
+  const handleDrag = useCallback((e, type) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(prev => ({ ...prev, [type]: true }));
+    } else if (e.type === "dragleave") {
+      setDragActive(prev => ({ ...prev, [type]: false }));
+    }
+  }, []);
+
+  const handleDrop = useCallback((e, type) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(prev => ({ ...prev, [type]: false }));
+
+    const files = Array.from(e.dataTransfer.files);
+    handleFileUpload(files, type);
+  }, []);
+
+  // File validation
+  const validateFile = (file, type) => {
+    const errors = [];
+    
+    if (file.size > maxFileSize) {
+      errors.push(`File "${file.name}" exceeds 50MB limit`);
+    }
+
+    const allowedTypes = type === "code" ? codeFileTypes : srsFileTypes;
+    const fileExtension = "." + file.name.split(".").pop().toLowerCase();
+    
+    if (!allowedTypes.includes(fileExtension)) {
+      errors.push(`File "${file.name}" has unsupported format. Allowed: ${allowedTypes.join(", ")}`);
+    }
+
+    return errors;
+  };
+
+  // File upload handler
+  const handleFileUpload = async (files, type) => {
+    const errors = [];
+    const validFiles = [];
+
+    // Check file count limits
+    const currentFiles = uploadedFiles[type === "code" ? "codeFiles" : "srsFiles"];
+    const maxFiles = type === "code" ? maxCodeFiles : maxSrsFiles;
+    
+    if (currentFiles.length + files.length > maxFiles) {
+      errors.push(`Cannot upload more than ${maxFiles} ${type} files`);
+    }
+
+    // Validate each file
+    files.forEach(file => {
+      const fileErrors = validateFile(file, type);
+      if (fileErrors.length === 0) {
+        validFiles.push({
+          id: Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          lastModified: file.lastModified,
+          content: null, // Will be populated when read
+          file: file
+        });
+      } else {
+        errors.push(...fileErrors);
+      }
+    });
+
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
+    // Simulate file processing with progress
+    for (let file of validFiles) {
+      setUploadProgress(prev => ({ ...prev, [file.id]: 0 }));
+      
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          const currentProgress = prev[file.id] || 0;
+          if (currentProgress >= 100) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return { ...prev, [file.id]: Math.min(currentProgress + 10, 100) };
+        });
+      }, 100);
+
+      // Read file content for code files
+      if (type === "code") {
+        try {
+          const content = await readFileContent(file.file);
+          file.content = content;
+        } catch (error) {
+          console.error("Error reading file:", error);
+        }
+      }
+    }
+
+    // Update state
+    const fileType = type === "code" ? "codeFiles" : "srsFiles";
+    const updatedFiles = {
+      ...uploadedFiles,
+      [fileType]: [...uploadedFiles[fileType], ...validFiles]
+    };
+
+    dispatch({
+      type: "SET_UPLOADED_FILES",
+      payload: updatedFiles
+    });
+
+    toast({
+      title: "Files uploaded successfully",
+      description: `${validFiles.length} ${type} file(s) processed`,
+    });
+
+    setValidationErrors([]);
+  };
+
+  // Read file content
+  const readFileContent = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+  };
+
+  // Remove file
+  const removeFile = (fileId, type) => {
+    const fileType = type === "code" ? "codeFiles" : "srsFiles";
+    const updatedFiles = {
+      ...uploadedFiles,
+      [fileType]: uploadedFiles[fileType].filter(file => file.id !== fileId)
+    };
+
+    dispatch({
+      type: "SET_UPLOADED_FILES",
+      payload: updatedFiles
+    });
+
+    // Remove from upload progress
+    setUploadProgress(prev => {
+      const { [fileId]: removed, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  // Clear all files
+  const clearAllFiles = (type) => {
+    const fileType = type === "code" ? "codeFiles" : "srsFiles";
+    const updatedFiles = {
+      ...uploadedFiles,
+      [fileType]: []
+    };
+
+    dispatch({
+      type: "SET_UPLOADED_FILES",
+      payload: updatedFiles
+    });
+  };
+
+  // Proceed to analysis
+  const proceedToAnalysis = () => {
+    dispatch({ type: "SET_CURRENT_STEP", payload: 2 });
+    navigate("/validation");
+  };
+
+  // Check if can proceed
+  const canProceed = uploadedFiles.codeFiles.length > 0 && uploadedFiles.srsFiles.length > 0;
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+          Upload Your Project Files
+        </h1>
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          Upload your source code and SRS documents to begin AI-powered code analysis and review
+        </p>
+      </div>
+
+      {/* Validation Errors */}
+      {validationErrors.length > 0 && (
+        <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <div className="space-y-1">
+              {validationErrors.map((error, index) => (
+                <div key={index} className="text-sm text-red-600 dark:text-red-400">
+                  {error}
+                </div>
+              ))}
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Code Files Upload */}
+        <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border-2 hover:shadow-lg transition-all duration-300">
+          <CardHeader className="space-y-2">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900">
+                <Code2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Source Code Files</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Upload project folders, zip files, or individual source files
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            {/* Upload Area */}
+            <div
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 cursor-pointer ${
+                dragActive.code
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20 scale-105"
+                  : "border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/10"
+              }`}
+              onDragEnter={(e) => handleDrag(e, "code")}
+              onDragLeave={(e) => handleDrag(e, "code")}
+              onDragOver={(e) => handleDrag(e, "code")}
+              onDrop={(e) => handleDrop(e, "code")}
+              onClick={() => document.getElementById("codeFileInput").click()}
+            >
+              <input
+                id="codeFileInput"
+                type="file"
+                multiple
+                accept={codeFileTypes.join(",")}
+                onChange={(e) => handleFileUpload(Array.from(e.target.files), "code")}
+                className="hidden"
+              />
+              
+              <div className="space-y-4">
+                <div className="mx-auto w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                  <Archive className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    Drag & Drop Code Files
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    or <span className="text-blue-600 font-medium">browse files</span>
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1 justify-center">
+                  {codeFileTypes.map(type => (
+                    <Badge key={type} variant="secondary" className="text-xs">
+                      {type}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Uploaded Files */}
+            {uploadedFiles.codeFiles.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-slate-900 dark:text-slate-100">
+                    Uploaded Files ({uploadedFiles.codeFiles.length})
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => clearAllFiles("code")}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                  >
+                    Clear All
+                  </Button>
+                </div>
+                
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {uploadedFiles.codeFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-lg border shadow-sm"
+                    >
+                      <div className="flex items-center space-x-3 flex-1">
+                        <FileCode className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                            {file.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {(file.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                        {uploadProgress[file.id] !== undefined && uploadProgress[file.id] < 100 ? (
+                          <Progress value={uploadProgress[file.id]} className="w-16" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeFile(file.id, "code")}
+                        className="ml-2 h-8 w-8 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* SRS Files Upload */}
+        <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50 border-2 hover:shadow-lg transition-all duration-300">
+          <CardHeader className="space-y-2">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
+                <FileText className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">SRS Documents</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Upload Software Requirements Specification documents
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            {/* Upload Area */}
+            <div
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 cursor-pointer ${
+                dragActive.srs
+                  ? "border-green-500 bg-green-50 dark:bg-green-950/20 scale-105"
+                  : "border-slate-300 dark:border-slate-600 hover:border-green-400 hover:bg-green-50/50 dark:hover:bg-green-950/10"
+              }`}
+              onDragEnter={(e) => handleDrag(e, "srs")}
+              onDragLeave={(e) => handleDrag(e, "srs")}
+              onDragOver={(e) => handleDrag(e, "srs")}
+              onDrop={(e) => handleDrop(e, "srs")}
+              onClick={() => document.getElementById("srsFileInput").click()}
+            >
+              <input
+                id="srsFileInput"
+                type="file"
+                multiple
+                accept={srsFileTypes.join(",")}
+                onChange={(e) => handleFileUpload(Array.from(e.target.files), "srs")}
+                className="hidden"
+              />
+              
+              <div className="space-y-4">
+                <div className="mx-auto w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                  <FileText className="h-8 w-8 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    Drag & Drop SRS Documents
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    or <span className="text-green-600 font-medium">browse files</span>
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1 justify-center">
+                  {srsFileTypes.map(type => (
+                    <Badge key={type} variant="secondary" className="text-xs">
+                      {type}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Uploaded Files */}
+            {uploadedFiles.srsFiles.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-slate-900 dark:text-slate-100">
+                    Uploaded Documents ({uploadedFiles.srsFiles.length})
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => clearAllFiles("srs")}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                  >
+                    Clear All
+                  </Button>
+                </div>
+                
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {uploadedFiles.srsFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-lg border shadow-sm"
+                    >
+                      <div className="flex items-center space-x-3 flex-1">
+                        <File className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                            {file.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {(file.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                        {uploadProgress[file.id] !== undefined && uploadProgress[file.id] < 100 ? (
+                          <Progress value={uploadProgress[file.id]} className="w-16" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeFile(file.id, "srs")}
+                        className="ml-2 h-8 w-8 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Action Button */}
+      <div className="text-center">
+        <Button
+          onClick={proceedToAnalysis}
+          disabled={!canProceed}
+          size="lg"
+          className={`px-8 py-3 text-lg font-semibold transition-all duration-300 transform ${
+            canProceed
+              ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg hover:scale-105 shadow-md"
+              : "opacity-50 cursor-not-allowed"
+          }`}
+        >
+          Proceed to Analysis
+          <ArrowRight className="ml-2 h-5 w-5" />
+        </Button>
+        {!canProceed && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Please upload both source code and SRS documents to continue
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default FileUploadPage;
