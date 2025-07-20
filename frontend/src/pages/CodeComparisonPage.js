@@ -349,14 +349,14 @@ const CodeComparisonPage = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-teal-600 dark:from-green-400 dark:to-teal-400 bg-clip-text text-transparent">
-          Code Review & Comparison
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+          Review Changes
         </h1>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          Review AI-suggested changes and accept or reject modifications line by line
+        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+          Review AI-suggested changes and accept or reject modifications
         </p>
       </div>
 
