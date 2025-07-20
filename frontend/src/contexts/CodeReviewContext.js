@@ -17,7 +17,8 @@ const initialState = {
     changesReviewed: 0
   },
   selectedModel: "gpt-4o",
-  isAnalyzing: false
+  isAnalyzing: false,
+  sessionId: null
 };
 
 function codeReviewReducer(state, action) {
