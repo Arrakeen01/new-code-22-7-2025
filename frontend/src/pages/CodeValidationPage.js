@@ -557,7 +557,28 @@ const CodeValidationPage = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="analysis" className="space-y-6">
+        <TabsContent value="editor" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Code className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <span>Code Editor</span>
+              </CardTitle>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                View and edit your uploaded code files
+              </p>
+            </CardHeader>
+            <CardContent>
+              <CodeEditor 
+                files={uploadedFiles.codeFiles}
+                onFileChange={handleFileChange}
+                onFileCreate={handleFileCreate}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analysis" className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
               Analysis Results
