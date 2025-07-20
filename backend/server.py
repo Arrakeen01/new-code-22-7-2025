@@ -96,6 +96,15 @@ async def upload_file(request: FileUploadRequest, session_id: str):
         print(f"Upload error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/files/session/{session_id}")
+async def get_session_files(session_id: str):
+    """Get all files for a session"""
+    files = await files_collection.find({"session_id": session_id}).to_list(1000)
+    return {
+        "files": files,
+        "stats": FileProcessor.get_file_stats([UploadedFile(**f) for f in files])
+    }
+
 @api_router.get("/files/download-zip/{session_id}")
 async def download_files_as_zip(session_id: str):
     """Download all files for a session as a zip file"""
