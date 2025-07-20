@@ -470,15 +470,19 @@ const CodeValidationPage = () => {
       </Card>
 
       {/* Main Content Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="checklist" className="flex items-center space-x-2">
             <CheckSquare className="h-4 w-4" />
             <span>AI Generated Checklist</span>
           </TabsTrigger>
+          <TabsTrigger value="editor" className="flex items-center space-x-2">
+            <Code className="h-4 w-4" />
+            <span>Code Editor</span>
+          </TabsTrigger>
           <TabsTrigger value="analysis" className="flex items-center space-x-2" disabled={!analysisResults}>
             <Bug className="h-4 w-4" />
-            <span>Code Analysis Results</span>
+            <span>Analysis Results</span>
           </TabsTrigger>
         </TabsList>
 
