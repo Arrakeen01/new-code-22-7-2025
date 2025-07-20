@@ -57,6 +57,36 @@ const CodeValidationPage = () => {
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [fixingIssues, setFixingIssues] = useState(new Set());
 
+  // File editor functions
+  const handleFileChange = (fileId, content) => {
+    // Update file content in the context
+    const updatedFiles = uploadedFiles.codeFiles.map(file => 
+      file.id === fileId ? { ...file, content } : file
+    );
+    dispatch({
+      type: "SET_UPLOADED_FILES",
+      payload: { ...uploadedFiles, codeFiles: updatedFiles }
+    });
+  };
+
+  const handleFileCreate = (fileName) => {
+    const newFile = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: fileName,
+      content: "// New file\n",
+      size: 12,
+      type: "text/plain"
+    };
+    
+    dispatch({
+      type: "SET_UPLOADED_FILES", 
+      payload: { 
+        ...uploadedFiles, 
+        codeFiles: [...uploadedFiles.codeFiles, newFile] 
+      }
+    });
+  };
+
   // Available AI models
   const availableModels = [
     { id: "gpt-4o", name: "GPT-4o", provider: "OpenAI", description: "Most capable model for code analysis" },
