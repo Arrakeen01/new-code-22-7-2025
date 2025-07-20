@@ -96,14 +96,43 @@ async def upload_file(request: FileUploadRequest, session_id: str):
         print(f"Upload error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/files/session/{session_id}")
-async def get_session_files(session_id: str):
-    """Get all files for a session"""
-    files = await files_collection.find({"session_id": session_id}).to_list(1000)
-    return {
-        "files": files,
-        "stats": FileProcessor.get_file_stats([UploadedFile(**f) for f in files])
-    }
+@api_router.post("/files/validate-srs", response_model=dict)
+async def validate_srs_file(file_id: str):
+    """Validate if uploaded file is actually an SRS document"""
+    try:
+        # Get file from database
+        file_doc = await files_collection.find_one({"id": file_id, "type": FileType.SRS})
+        
+        if not file_doc:
+            raise HTTPException(status_code=404, detail="SRS file not found")
+        
+        # Simple validation based on content keywords
+        content = file_doc.get('content', '').lower()
+        
+        # SRS keywords to look for
+        srs_keywords = [
+            'requirements', 'specification', 'functional', 'non-functional',
+            'system', 'software', 'user story', 'use case', 'acceptance criteria',
+            'business rule', 'constraint', 'assumption', 'dependency'
+        ]
+        
+        # Count how many keywords are present
+        keyword_count = sum(1 for keyword in srs_keywords if keyword in content)
+        
+        # If less than 3 SRS-related keywords found, likely not an SRS
+        is_valid_srs = keyword_count >= 3
+        confidence = min((keyword_count / 8) * 100, 100)  # Max confidence at 8+ keywords
+        
+        return {
+            "is_valid_srs": is_valid_srs,
+            "confidence": round(confidence, 1),
+            "keywords_found": keyword_count,
+            "message": "Valid SRS document" if is_valid_srs else "This doesn't appear to be an SRS document. Please upload a Software Requirements Specification."
+        }
+        
+    except Exception as e:
+        print(f"SRS validation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/files/download-zip/{session_id}")
 async def download_files_as_zip(session_id: str):
