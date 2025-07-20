@@ -392,8 +392,7 @@ const CodeValidationPage = () => {
               <Button
                 onClick={startAnalysis}
                 disabled={isAnalyzing}
-                size="lg"
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
                 {isAnalyzing ? (
                   <>
