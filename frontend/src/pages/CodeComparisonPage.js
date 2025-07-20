@@ -557,7 +557,7 @@ const CodeComparisonPage = () => {
               <Button 
                 size="lg"
                 disabled={reviewStats.pendingChanges > 0}
-                className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Save className="h-5 w-5 mr-2" />
                 Finalize Review
