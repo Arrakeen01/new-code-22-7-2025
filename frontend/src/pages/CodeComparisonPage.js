@@ -37,7 +37,7 @@ import {
 
 const CodeComparisonPage = () => {
   const { toast } = useToast();
-  const { analysisResults, modifiedCode, reviewProgress, dispatch } = useCodeReview();
+  const { analysisResults, modifiedCode, reviewProgress, uploadedFiles, dispatch } = useCodeReview();
   
   const [selectedFile, setSelectedFile] = useState("UserProfile.js");
   const [viewMode, setViewMode] = useState("side-by-side"); // side-by-side | unified
