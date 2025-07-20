@@ -12,6 +12,7 @@ import { ScrollArea } from "../components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { useToast } from "../hooks/use-toast";
 import { useCodeReview } from "../contexts/CodeReviewContext";
+import CodeEditor from "../components/CodeEditor";
 import { 
   mockChecklist, 
   mockAnalysisResults, 
