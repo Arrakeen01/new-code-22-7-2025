@@ -512,18 +512,7 @@ const FileUploadPage = () => {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-center space-x-4">
-        {(uploadedFiles.codeFiles.length > 0 || uploadedFiles.srsFiles.length > 0) && (
-          <Button
-            onClick={downloadFilesAsZip}
-            variant="outline"
-            className="px-6 py-2"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Download All Files
-          </Button>
-        )}
-        
+      <div className="text-center">
         <Button
           onClick={proceedToAnalysis}
           disabled={!canProceed}
