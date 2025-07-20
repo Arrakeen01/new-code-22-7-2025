@@ -16,7 +16,6 @@ const initialState = {
     filesModified: 0,
     changesReviewed: 0
   },
-  currentStep: 1,
   selectedModel: "gpt-4o",
   isAnalyzing: false
 };
@@ -68,12 +67,6 @@ function codeReviewReducer(state, action) {
           ...state.reviewProgress,
           ...action.payload
         }
-      };
-    
-    case "SET_CURRENT_STEP":
-      return {
-        ...state,
-        currentStep: action.payload
       };
     
     case "SET_SELECTED_MODEL":
