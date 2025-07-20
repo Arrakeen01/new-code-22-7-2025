@@ -487,10 +487,10 @@ const CodeComparisonPage = () => {
       </Card>
 
       {/* File Selection and View Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <Select value={selectedFile} onValueChange={setSelectedFile}>
-            <SelectTrigger className="w-64">
+            <SelectTrigger className="w-full sm:w-64">
               <SelectValue placeholder="Select file to review" />
             </SelectTrigger>
             <SelectContent>
@@ -512,9 +512,9 @@ const CodeComparisonPage = () => {
             </SelectContent>
           </Select>
           
-          <Separator orientation="vertical" className="h-8" />
+          <Separator orientation="vertical" className="h-8 hidden sm:block" />
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Button
               variant={viewMode === "side-by-side" ? "default" : "outline"}
               size="sm"
@@ -534,7 +534,7 @@ const CodeComparisonPage = () => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
@@ -546,13 +546,49 @@ const CodeComparisonPage = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={generateReport}
+            onClick={downloadFilesAsZip}
           >
             <Download className="h-4 w-4 mr-2" />
-            Export Report
+            Download All Files
           </Button>
         </div>
       </div>
+
+      {/* Main Content Tabs */}
+      <Tabs defaultValue="comparison" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="comparison" className="flex items-center space-x-2">
+            <GitCompare className="h-4 w-4" />
+            <span>Code Comparison</span>
+          </TabsTrigger>
+          <TabsTrigger value="editor" className="flex items-center space-x-2">
+            <Code className="h-4 w-4" />
+            <span>Code Editor</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="editor" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Code className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <span>Code Editor</span>
+              </CardTitle>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                View and edit your code files after review
+              </p>
+            </CardHeader>
+            <CardContent>
+              <CodeEditor 
+                files={uploadedFiles.codeFiles || []}
+                onFileChange={handleFileChange}
+                onFileCreate={handleFileCreate}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="comparison" className="space-y-4">
 
       {/* File Details */}
       {selectedFile && mockFixedFiles[selectedFile] && (
