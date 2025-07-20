@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "../components/ui/alert";
 import { useToast } from "../hooks/use-toast";
 import { useCodeReview } from "../contexts/CodeReviewContext";
 import { mockFixedFiles } from "../utils/mockData";
+import CodeEditor from "../components/CodeEditor";
 import {
   GitCompare,
   Check,
@@ -30,7 +31,8 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  BarChart3
+  BarChart3,
+  Code
 } from "lucide-react";
 
 const CodeComparisonPage = () => {
