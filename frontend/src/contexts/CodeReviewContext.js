@@ -82,6 +82,12 @@ function codeReviewReducer(state, action) {
         isAnalyzing: action.payload
       };
     
+    case "SET_SESSION_ID":
+      return {
+        ...state,
+        sessionId: action.payload
+      };
+    
     case "CLEAR_ALL_DATA":
       return initialState;
     
