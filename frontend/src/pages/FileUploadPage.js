@@ -160,14 +160,26 @@ const FileUploadPage = () => {
     setValidationErrors([]);
   };
 
-  // Read file content
-  const readFileContent = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = reject;
-      reader.readAsText(file);
-    });
+  // Validate SRS file with AI
+  const validateSRSFile = async (fileId) => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/files/validate-srs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ file_id: fileId })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        return result;
+      }
+    } catch (error) {
+      console.error('SRS validation error:', error);
+    }
+    return null;
   };
 
   // Remove file
