@@ -361,16 +361,14 @@ const CodeComparisonPage = () => {
       </div>
 
       {/* Review Progress */}
-      <Card className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border-2">
+      <Card className="border">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
-                <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
+              <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <div>
                 <CardTitle>Review Progress</CardTitle>
-                <p className="text-sm text-muted-foreground">Track your code review progress</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Track your code review progress</p>
               </div>
             </div>
             <div className="text-right">
