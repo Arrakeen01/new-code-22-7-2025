@@ -343,16 +343,14 @@ const CodeValidationPage = () => {
       </div>
 
       {/* Model Selection & Analysis Controls */}
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-2">
+      <Card className="border">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900">
-                <Bot className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
+              <Bot className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <div>
                 <CardTitle>AI Model Configuration</CardTitle>
-                <p className="text-sm text-muted-foreground">Choose the AI model for code analysis</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Choose the AI model for code analysis</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
