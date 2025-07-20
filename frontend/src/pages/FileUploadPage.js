@@ -358,16 +358,14 @@ const FileUploadPage = () => {
         </Card>
 
         {/* SRS Files Upload */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50 border-2 hover:shadow-lg transition-all duration-300">
-          <CardHeader className="space-y-2">
+        <Card className="border hover:shadow-md transition-shadow">
+          <CardHeader>
             <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
-                <FileText className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
+              <FileText className="h-5 w-5 text-green-600 dark:text-green-400" />
               <div>
-                <CardTitle className="text-xl">SRS Documents</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Upload Software Requirements Specification documents
+                <CardTitle className="text-lg">SRS Documents</CardTitle>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Upload requirement documents
                 </p>
               </div>
             </div>
@@ -376,10 +374,10 @@ const FileUploadPage = () => {
           <CardContent className="space-y-4">
             {/* Upload Area */}
             <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 cursor-pointer ${
+              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
                 dragActive.srs
-                  ? "border-green-500 bg-green-50 dark:bg-green-950/20 scale-105"
-                  : "border-slate-300 dark:border-slate-600 hover:border-green-400 hover:bg-green-50/50 dark:hover:bg-green-950/10"
+                  ? "border-green-500 bg-green-50 dark:bg-green-950/20"
+                  : "border-slate-300 dark:border-slate-600 hover:border-green-400"
               }`}
               onDragEnter={(e) => handleDrag(e, "srs")}
               onDragLeave={(e) => handleDrag(e, "srs")}
@@ -396,16 +394,14 @@ const FileUploadPage = () => {
                 className="hidden"
               />
               
-              <div className="space-y-4">
-                <div className="mx-auto w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                  <FileText className="h-8 w-8 text-green-600 dark:text-green-400" />
-                </div>
+              <div className="space-y-3">
+                <FileText className="h-8 w-8 text-green-600 dark:text-green-400 mx-auto" />
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                    Drag & Drop SRS Documents
+                  <h3 className="font-medium text-slate-900 dark:text-slate-100">
+                    Drag & Drop Documents
                   </h3>
-                  <p className="text-sm text-muted-foreground">
-                    or <span className="text-green-600 font-medium">browse files</span>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    or click to browse
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-1 justify-center">
