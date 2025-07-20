@@ -239,18 +239,16 @@ const FileUploadPage = () => {
         </Alert>
       )}
 
-      <div className="grid lg:grid-cols-2 gap-8">
+      <div className="grid lg:grid-cols-2 gap-6">
         {/* Code Files Upload */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border-2 hover:shadow-lg transition-all duration-300">
-          <CardHeader className="space-y-2">
+        <Card className="border hover:shadow-md transition-shadow">
+          <CardHeader>
             <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900">
-                <Code2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
+              <Code2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <div>
-                <CardTitle className="text-xl">Source Code Files</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Upload project folders, zip files, or individual source files
+                <CardTitle className="text-lg">Source Code Files</CardTitle>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Upload your project source files
                 </p>
               </div>
             </div>
