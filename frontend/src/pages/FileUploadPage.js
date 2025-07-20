@@ -205,7 +205,6 @@ const FileUploadPage = () => {
 
   // Proceed to analysis
   const proceedToAnalysis = () => {
-    dispatch({ type: "SET_CURRENT_STEP", payload: 2 });
     navigate("/validation");
   };
 
