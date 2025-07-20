@@ -681,6 +681,8 @@ const CodeComparisonPage = () => {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
