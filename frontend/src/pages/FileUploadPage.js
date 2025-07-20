@@ -257,10 +257,10 @@ const FileUploadPage = () => {
           <CardContent className="space-y-4">
             {/* Upload Area */}
             <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 cursor-pointer ${
+              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
                 dragActive.code
-                  ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20 scale-105"
-                  : "border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/10"
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
+                  : "border-slate-300 dark:border-slate-600 hover:border-blue-400"
               }`}
               onDragEnter={(e) => handleDrag(e, "code")}
               onDragLeave={(e) => handleDrag(e, "code")}
@@ -277,24 +277,27 @@ const FileUploadPage = () => {
                 className="hidden"
               />
               
-              <div className="space-y-4">
-                <div className="mx-auto w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-                  <Archive className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                </div>
+              <div className="space-y-3">
+                <Archive className="h-8 w-8 text-blue-600 dark:text-blue-400 mx-auto" />
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                    Drag & Drop Code Files
+                  <h3 className="font-medium text-slate-900 dark:text-slate-100">
+                    Drag & Drop Files Here
                   </h3>
-                  <p className="text-sm text-muted-foreground">
-                    or <span className="text-blue-600 font-medium">browse files</span>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    or click to browse
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-1 justify-center">
-                  {codeFileTypes.map(type => (
+                  {codeFileTypes.slice(0, 6).map(type => (
                     <Badge key={type} variant="secondary" className="text-xs">
                       {type}
                     </Badge>
                   ))}
+                  {codeFileTypes.length > 6 && (
+                    <Badge variant="secondary" className="text-xs">
+                      +{codeFileTypes.length - 6} more
+                    </Badge>
+                  )}
                 </div>
               </div>
             </div>
