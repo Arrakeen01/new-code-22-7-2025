@@ -563,11 +563,10 @@ const CodeValidationPage = () => {
         <div className="text-center">
           <Button
             onClick={proceedToComparison}
-            size="lg"
-            className="px-8 py-3 text-lg font-semibold bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white"
           >
             Review Code Changes
-            <ArrowRight className="ml-2 h-5 w-5" />
+            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       )}
