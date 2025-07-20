@@ -157,7 +157,6 @@ const CodeValidationPage = () => {
   };
 
   const proceedToComparison = () => {
-    dispatch({ type: "SET_CURRENT_STEP", payload: 3 });
     navigate("/comparison");
   };
 
