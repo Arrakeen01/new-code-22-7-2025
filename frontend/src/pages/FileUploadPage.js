@@ -208,8 +208,45 @@ const FileUploadPage = () => {
     navigate("/validation");
   };
 
-  // Check if can proceed
-  const canProceed = uploadedFiles.codeFiles.length > 0 && uploadedFiles.srsFiles.length > 0;
+  // Download files as zip
+  const downloadFilesAsZip = async () => {
+    if (!uploadedFiles.codeFiles.length && !uploadedFiles.srsFiles.length) {
+      toast({
+        title: "No Files to Download",
+        description: "Please upload some files first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Create a session ID if not exists
+      const sessionId = "temp_session_" + Date.now();
+      
+      // Create download URL
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const downloadUrl = `${backendUrl}/api/files/download-zip/${sessionId}`;
+      
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `uploaded_files_${sessionId}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Download Started",
+        description: "Your files are being downloaded as a zip file",
+      });
+    } catch (error) {
+      toast({
+        title: "Download Failed", 
+        description: "Could not download files. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
