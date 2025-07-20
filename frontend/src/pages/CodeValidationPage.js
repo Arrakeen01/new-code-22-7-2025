@@ -323,7 +323,11 @@ const CodeValidationPage = () => {
   };
 
   if (uploadedFiles.codeFiles.length === 0) {
-    return null;
+    return (
+      <div className="text-center py-8">
+        <p className="text-slate-600 dark:text-slate-400">Please upload some code files first.</p>
+      </div>
+    );
   }
 
   return (
