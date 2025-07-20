@@ -19,7 +19,8 @@ import {
   ArrowRight,
   Code2,
   FileCode,
-  Archive
+  Archive,
+  Download
 } from "lucide-react";
 
 const FileUploadPage = () => {
