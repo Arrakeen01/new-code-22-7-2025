@@ -248,6 +248,9 @@ const FileUploadPage = () => {
     }
   };
 
+  // Check if can proceed
+  const canProceed = uploadedFiles.codeFiles.length > 0 && uploadedFiles.srsFiles.length > 0;
+
   return (
     <div className="space-y-6">
       {/* Header */}
