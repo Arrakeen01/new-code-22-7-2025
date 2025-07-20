@@ -331,14 +331,14 @@ const CodeValidationPage = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-          AI Code Analysis Dashboard
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+          Code Analysis
         </h1>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          Review AI-generated checklist and analyze your code for potential issues
+        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+          Review AI-generated checklist and analyze your code for issues
         </p>
       </div>
 
