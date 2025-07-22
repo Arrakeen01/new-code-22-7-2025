@@ -748,15 +748,25 @@ Project: Fibonacci Calculator System
         print(f"Testing backend at: {API_BASE}")
         print()
         
-        # Test sequence
+        # Test sequence - Basic functionality first, then AI features
         tests = [
             ("API Health Check", self.test_api_health),
             ("Session Creation", self.test_session_creation),
             ("File Upload", self.test_file_upload),
             ("Additional File Upload", self.test_additional_file_upload),
+            ("SRS File Upload", self.upload_srs_file),
             ("Session Files Retrieval", self.test_session_files_retrieval),
             ("Zip Download (PRIORITY)", self.test_zip_download),
             ("Empty Session Zip Download", self.test_empty_session_zip_download),
+            
+            # Advanced AI Features - HIGH PRIORITY TESTS
+            ("Comprehensive AI Analysis (HIGH PRIORITY)", self.test_comprehensive_analysis),
+            ("Traceability Matrix", self.test_traceability_matrix),
+            ("Health Metrics", self.test_health_metrics),
+            ("Chat Assistant", self.test_chat_assistant),
+            ("Comprehensive Report", self.test_comprehensive_report),
+            ("AI Dashboard", self.test_ai_dashboard),
+            ("Code Suggestions", self.test_code_suggestions),
         ]
         
         passed = 0
