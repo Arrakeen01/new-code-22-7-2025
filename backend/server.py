@@ -33,6 +33,7 @@ db = client[os.environ['DB_NAME']]
 # Initialize services
 file_processor = FileProcessor()
 ai_service = AIService()
+enhanced_ai_service = EnhancedAIService()
 
 # Create the main app without a prefix
 app = FastAPI(title="CodeReview AI API", version="1.0.0")
