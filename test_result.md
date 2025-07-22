@@ -285,9 +285,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Test zip download functionality end-to-end"
-    - "Test free navigation between pages"
-    - "Verify UI simplification improvements"
+    - "Test comprehensive AI analysis with all specialized agents"
+    - "Verify traceability matrix generation with confidence scoring"
+    - "Test contextual chat assistant with session memory"
+    - "Validate health metrics calculation and heatmap data"
+    - "Test comprehensive report generation system"
+    - "Verify all new advanced AI API endpoints"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
