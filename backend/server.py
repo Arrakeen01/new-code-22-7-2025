@@ -16,7 +16,8 @@ from models import (
     FileUploadRequest, FileUploadResponse, AnalysisRequest, AnalysisResponse,
     ChecklistResponse, CodeFixRequest, CodeFixResponse, ReviewUpdateRequest,
     ReviewResponse, ReportResponse, UploadedFile, ReviewSession, AnalysisResults,
-    FileType, AnalysisStatus, ChecklistItem, FileAnalysis, ModifiedFile, CodeIssue
+    FileType, AnalysisStatus, ChecklistItem, FileAnalysis, ModifiedFile, CodeIssue,
+    TraceabilityMapping, HealthMetric, ChatContext, ChatMessage, ComprehensiveReport
 )
 from services.file_processor import FileProcessor
 from services.ai_service import AIService
