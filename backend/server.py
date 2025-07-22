@@ -47,6 +47,12 @@ sessions_collection = db.review_sessions
 files_collection = db.uploaded_files
 analyses_collection = db.analysis_results
 
+# Advanced AI collections
+traceability_collection = db.traceability_mappings
+health_metrics_collection = db.health_metrics
+chat_history_collection = db.chat_messages
+reports_collection = db.comprehensive_reports
+
 
 @api_router.get("/")
 async def root():
