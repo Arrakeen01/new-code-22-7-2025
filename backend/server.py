@@ -490,6 +490,363 @@ async def generate_report(session_id: str, include_code: bool = True):
         print(f"Report generation error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# =============================================
+# ADVANCED AI FEATURES ENDPOINTS
+# =============================================
+
+@api_router.post("/ai/comprehensive-analysis")
+async def comprehensive_analysis(session_id: str, model: str = "gpt-4o"):
+    """Perform comprehensive analysis using all AI agents"""
+    try:
+        # Get files for session
+        code_files = await files_collection.find({
+            "session_id": session_id,
+            "type": "code"
+        }).to_list(100)
+        
+        srs_files = await files_collection.find({
+            "session_id": session_id,
+            "type": "srs"
+        }).to_list(100)
+        
+        if not code_files or not srs_files:
+            raise HTTPException(
+                status_code=400, 
+                detail="Both SRS and code files are required for comprehensive analysis"
+            )
+        
+        # Convert to UploadedFile objects
+        code_file_objects = [UploadedFile(**f) for f in code_files]
+        srs_file_objects = [UploadedFile(**f) for f in srs_files]
+        
+        # Perform comprehensive analysis
+        analysis_results = await enhanced_ai_service.comprehensive_analysis(
+            srs_file_objects, code_file_objects, session_id
+        )
+        
+        # Save traceability mappings
+        if analysis_results.get('traceability_matrix'):
+            for mapping_data in analysis_results['traceability_matrix']:
+                mapping_data['session_id'] = session_id
+                await traceability_collection.insert_one(mapping_data)
+        
+        # Save health metrics
+        if analysis_results.get('health_metrics'):
+            for metric_data in analysis_results['health_metrics']:
+                metric_data['session_id'] = session_id
+                await health_metrics_collection.insert_one(metric_data)
+        
+        # Update analysis collection with enhanced results
+        analysis_results['session_id'] = session_id
+        analysis_results['model_used'] = model
+        analysis_results['analysis_type'] = 'comprehensive'
+        await analyses_collection.insert_one(analysis_results)
+        
+        return {
+            "status": "completed",
+            "message": "Comprehensive analysis completed successfully",
+            "summary": analysis_results.get('summary', {}),
+            "traceability_coverage": len(analysis_results.get('traceability_matrix', [])),
+            "health_score": analysis_results.get('summary', {}).get('healthScore', 0)
+        }
+        
+    except Exception as e:
+        print(f"Comprehensive analysis error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/ai/traceability-matrix/{session_id}")
+async def get_traceability_matrix(session_id: str):
+    """Get SRS-to-Code traceability matrix for session"""
+    try:
+        mappings = await traceability_collection.find({"session_id": session_id}).to_list(1000)
+        
+        if not mappings:
+            raise HTTPException(status_code=404, detail="No traceability data found")
+        
+        # Calculate coverage statistics
+        unique_requirements = len(set(m.get('requirement_id') for m in mappings))
+        high_confidence_mappings = len([m for m in mappings if m.get('confidence_score', 0) > 0.8])
+        coverage_percentage = (high_confidence_mappings / len(mappings)) * 100 if mappings else 0
+        
+        return {
+            "mappings": mappings,
+            "statistics": {
+                "total_mappings": len(mappings),
+                "unique_requirements": unique_requirements,
+                "high_confidence_mappings": high_confidence_mappings,
+                "coverage_percentage": round(coverage_percentage, 1)
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Traceability matrix error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/ai/health-metrics/{session_id}")
+async def get_health_metrics(session_id: str):
+    """Get code health metrics for session"""
+    try:
+        metrics = await health_metrics_collection.find({"session_id": session_id}).to_list(1000)
+        
+        if not metrics:
+            raise HTTPException(status_code=404, detail="No health metrics found")
+        
+        # Calculate summary statistics
+        total_files = len(metrics)
+        avg_complexity = sum(m.get('complexity_score', 0) for m in metrics) / total_files
+        avg_maintainability = sum(m.get('maintainability_index', 0) for m in metrics) / total_files
+        high_risk_files = len([m for m in metrics if m.get('security_risk_level') in ['high', 'critical']])
+        
+        return {
+            "metrics": metrics,
+            "summary": {
+                "total_files": total_files,
+                "average_complexity": round(avg_complexity, 1),
+                "average_maintainability": round(avg_maintainability, 1),
+                "high_risk_files": high_risk_files,
+                "overall_health_grade": "A" if avg_maintainability > 80 else "B" if avg_maintainability > 60 else "C"
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Health metrics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/ai/chat")
+async def chat_with_assistant(session_id: str, message: str):
+    """Chat with AI assistant with full session context"""
+    try:
+        # Get session context
+        uploaded_files = await files_collection.find({"session_id": session_id}).to_list(1000)
+        file_names = [f.get('name', '') for f in uploaded_files]
+        
+        # Get latest analysis results
+        analysis = await analyses_collection.find_one(
+            {"session_id": session_id},
+            sort=[("created_at", -1)]
+        )
+        
+        # Create chat context
+        context = enhanced_ai_service.create_chat_context(
+            session_id, file_names, analysis
+        )
+        
+        # Get AI response
+        response = await enhanced_ai_service.chat_with_context(message, context)
+        
+        # Save chat history
+        chat_record = {
+            "session_id": session_id,
+            "message": message,
+            "response": response,
+            "timestamp": datetime.utcnow(),
+            "context_summary": f"{len(file_names)} files, analysis available: {analysis is not None}"
+        }
+        await chat_history_collection.insert_one(chat_record)
+        
+        return {
+            "response": response,
+            "conversation_id": chat_record.get("_id", "unknown")
+        }
+        
+    except Exception as e:
+        print(f"Chat assistant error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/ai/chat-history/{session_id}")
+async def get_chat_history(session_id: str, limit: int = 20):
+    """Get chat conversation history for session"""
+    try:
+        history = await chat_history_collection.find(
+            {"session_id": session_id}
+        ).sort("timestamp", -1).limit(limit).to_list(limit)
+        
+        return {
+            "conversations": history,
+            "total_messages": len(history)
+        }
+        
+    except Exception as e:
+        print(f"Chat history error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/ai/comprehensive-report")
+async def generate_comprehensive_report(
+    session_id: str, 
+    include_traceability: bool = True,
+    include_health_metrics: bool = True,
+    format_type: str = "json"
+):
+    """Generate comprehensive audit-ready report"""
+    try:
+        # Get session data
+        session = await sessions_collection.find_one({"session_id": session_id})
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        # Get analysis results
+        analysis_results = await analyses_collection.find_one(
+            {"session_id": session_id, "analysis_type": "comprehensive"},
+            sort=[("created_at", -1)]
+        )
+        
+        if not analysis_results:
+            raise HTTPException(
+                status_code=404, 
+                detail="No comprehensive analysis found. Please run comprehensive analysis first."
+            )
+        
+        # Get traceability data
+        traceability_mappings = []
+        if include_traceability:
+            traceability_data = await traceability_collection.find({"session_id": session_id}).to_list(1000)
+            # Convert to TraceabilityMapping objects (simplified)
+            from services.specialized_ai_agents import TraceabilityMapping
+            traceability_mappings = [
+                TraceabilityMapping(
+                    requirement_id=t.get('requirement_id', ''),
+                    requirement_text=t.get('requirement_text', ''),
+                    code_element=t.get('code_element', ''),
+                    file_path=t.get('file_path', ''),
+                    line_number=t.get('line_number', 0),
+                    confidence_score=t.get('confidence_score', 0.0),
+                    element_type=t.get('element_type', 'unknown')
+                ) for t in traceability_data
+            ]
+        
+        # Get health metrics
+        health_metrics = []
+        if include_health_metrics:
+            health_data = await health_metrics_collection.find({"session_id": session_id}).to_list(1000)
+            # Convert to HealthMetric objects (simplified)
+            from services.specialized_ai_agents import HealthMetric
+            health_metrics = [
+                HealthMetric(
+                    file_path=h.get('file_path', ''),
+                    complexity_score=h.get('complexity_score', 0),
+                    maintainability_index=h.get('maintainability_index', 0.0),
+                    test_coverage=h.get('test_coverage', 0.0),
+                    code_duplication=h.get('code_duplication', 0),
+                    security_risk_level=h.get('security_risk_level', 'medium'),
+                    performance_issues=h.get('performance_issues', 0)
+                ) for h in health_data
+            ]
+        
+        # Generate comprehensive report
+        report = await enhanced_ai_service.generate_comprehensive_report(
+            session, analysis_results, traceability_mappings, health_metrics, session_id
+        )
+        
+        # Save report
+        report_dict = report.dict()
+        await reports_collection.insert_one(report_dict)
+        
+        return {
+            "report": report_dict,
+            "format_type": format_type,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Comprehensive report error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/ai/code-suggestions")
+async def get_code_suggestions(
+    session_id: str,
+    file_name: str,
+    code_snippet: str,
+    cursor_position: int = 0
+):
+    """Get real-time code suggestions for editing"""
+    try:
+        # Get session context for suggestions
+        analysis = await analyses_collection.find_one(
+            {"session_id": session_id},
+            sort=[("created_at", -1)]
+        )
+        
+        context = {
+            "session_id": session_id,
+            "has_analysis": analysis is not None,
+            "file_count": len(analysis.get('file_analyses', [])) if analysis else 0
+        }
+        
+        # Get suggestions
+        suggestions = await enhanced_ai_service.get_code_suggestions(
+            code_snippet, file_name, cursor_position, context, session_id
+        )
+        
+        return {
+            "suggestions": suggestions,
+            "context": context
+        }
+        
+    except Exception as e:
+        print(f"Code suggestions error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/ai/dashboard/{session_id}")
+async def get_ai_dashboard(session_id: str):
+    """Get comprehensive dashboard data for session"""
+    try:
+        # Get all data in parallel
+        session_data, analysis_data, traceability_data, health_data, chat_data = await asyncio.gather(
+            sessions_collection.find_one({"session_id": session_id}),
+            analyses_collection.find_one({"session_id": session_id}, sort=[("created_at", -1)]),
+            traceability_collection.find({"session_id": session_id}).to_list(1000),
+            health_metrics_collection.find({"session_id": session_id}).to_list(1000),
+            chat_history_collection.count_documents({"session_id": session_id})
+        )
+        
+        if not session_data:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        # Calculate dashboard metrics
+        dashboard = {
+            "session_info": {
+                "id": session_id,
+                "created_at": session_data.get('created_at'),
+                "status": session_data.get('status', 'active')
+            },
+            "analysis_summary": analysis_data.get('summary', {}) if analysis_data else {},
+            "traceability_stats": {
+                "total_mappings": len(traceability_data),
+                "high_confidence": len([t for t in traceability_data if t.get('confidence_score', 0) > 0.8]),
+                "coverage_percentage": (len([t for t in traceability_data if t.get('confidence_score', 0) > 0.8]) / max(1, len(traceability_data))) * 100
+            },
+            "health_overview": {
+                "files_analyzed": len(health_data),
+                "average_complexity": sum(h.get('complexity_score', 0) for h in health_data) / max(1, len(health_data)),
+                "high_risk_files": len([h for h in health_data if h.get('security_risk_level') in ['high', 'critical']])
+            },
+            "chat_activity": {
+                "total_messages": chat_data,
+                "assistant_available": True
+            }
+        }
+        
+        return dashboard
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Dashboard error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Include the router in the main app
 app.include_router(api_router)
 
