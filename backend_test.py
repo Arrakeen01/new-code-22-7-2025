@@ -352,6 +352,393 @@ displayFactorials();
         except Exception as e:
             self.log_test("Empty Session Zip Download", False, f"Request error: {str(e)}")
             return False
+
+    def upload_srs_file(self) -> bool:
+        """Upload an SRS file for AI testing"""
+        if not self.session_id:
+            self.log_test("SRS File Upload", False, "No session_id available")
+            return False
+        
+        try:
+            # Create sample SRS content
+            sample_srs = """
+Software Requirements Specification (SRS)
+Project: Fibonacci Calculator System
+
+1. FUNCTIONAL REQUIREMENTS
+
+1.1 Core Calculation Requirements
+- REQ-001: The system shall calculate fibonacci numbers for input values from 0 to 100
+- REQ-002: The system shall use recursive algorithm for fibonacci calculation
+- REQ-003: The system shall display results in a formatted sequence
+
+1.2 User Interface Requirements  
+- REQ-004: The system shall provide a command-line interface
+- REQ-005: The system shall display fibonacci sequence up to 10 numbers
+- REQ-006: The system shall handle invalid input gracefully
+
+2. NON-FUNCTIONAL REQUIREMENTS
+
+2.1 Performance Requirements
+- REQ-007: Fibonacci calculation shall complete within 1 second for n <= 30
+- REQ-008: System shall handle concurrent calculations efficiently
+
+2.2 Security Requirements
+- REQ-009: Input validation shall prevent buffer overflow attacks
+- REQ-010: System shall log all calculation requests
+
+3. TECHNICAL CONSTRAINTS
+- REQ-011: System shall be implemented in Python 3.8+
+- REQ-012: System shall follow PEP 8 coding standards
+- REQ-013: System shall include comprehensive error handling
+
+4. ACCEPTANCE CRITERIA
+- All fibonacci calculations must be mathematically correct
+- System must handle edge cases (n=0, n=1)
+- Code must be maintainable and well-documented
+"""
+            
+            # Encode content as base64
+            encoded_content = base64.b64encode(sample_srs.encode()).decode()
+            
+            # Prepare upload request
+            upload_data = {
+                "name": "fibonacci_srs.txt",
+                "content": encoded_content,
+                "size": len(sample_srs),
+                "type": "srs",
+                "mime_type": "text/plain"
+            }
+            
+            response = requests.post(
+                f"{API_BASE}/files/upload",
+                json=upload_data,
+                params={"session_id": self.session_id},
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "file_id" in data:
+                    self.uploaded_files.append({
+                        "file_id": data["file_id"],
+                        "name": "fibonacci_srs.txt",
+                        "content": sample_srs,
+                        "type": "srs"
+                    })
+                    self.log_test("SRS File Upload", True, f"SRS file uploaded: {data['file_id']}")
+                    return True
+                else:
+                    self.log_test("SRS File Upload", False, "Missing file_id in response", data)
+                    return False
+            else:
+                self.log_test("SRS File Upload", False, f"HTTP {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_test("SRS File Upload", False, f"Request error: {str(e)}")
+            return False
+
+    def test_comprehensive_analysis(self) -> bool:
+        """Test comprehensive AI analysis endpoint - HIGH PRIORITY"""
+        if not self.session_id:
+            self.log_test("Comprehensive AI Analysis", False, "No session_id available")
+            return False
+        
+        # Check if we have both SRS and code files
+        has_srs = any(f.get("type") == "srs" for f in self.uploaded_files)
+        has_code = any(f.get("type") != "srs" for f in self.uploaded_files)
+        
+        if not has_srs or not has_code:
+            self.log_test("Comprehensive AI Analysis", False, "Need both SRS and code files for analysis")
+            return False
+        
+        try:
+            response = requests.post(
+                f"{API_BASE}/ai/comprehensive-analysis",
+                params={"session_id": self.session_id, "model": "gpt-4o"},
+                timeout=120  # AI analysis can take time
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["status", "message", "summary"]
+                
+                if all(field in data for field in required_fields):
+                    if data["status"] == "completed":
+                        summary = data.get("summary", {})
+                        traceability_coverage = data.get("traceability_coverage", 0)
+                        health_score = data.get("health_score", 0)
+                        
+                        self.log_test("Comprehensive AI Analysis", True, 
+                                    f"Analysis completed. Coverage: {traceability_coverage}, Health: {health_score}")
+                        return True
+                    else:
+                        self.log_test("Comprehensive AI Analysis", False, f"Analysis failed: {data.get('message')}")
+                        return False
+                else:
+                    self.log_test("Comprehensive AI Analysis", False, "Missing required fields in response", data)
+                    return False
+            else:
+                self.log_test("Comprehensive AI Analysis", False, f"HTTP {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_test("Comprehensive AI Analysis", False, f"Request error: {str(e)}")
+            return False
+
+    def test_traceability_matrix(self) -> bool:
+        """Test traceability matrix endpoint"""
+        if not self.session_id:
+            self.log_test("Traceability Matrix", False, "No session_id available")
+            return False
+        
+        try:
+            response = requests.get(f"{API_BASE}/ai/traceability-matrix/{self.session_id}", timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "mappings" in data and "statistics" in data:
+                    mappings = data["mappings"]
+                    stats = data["statistics"]
+                    
+                    # Validate statistics structure
+                    required_stats = ["total_mappings", "unique_requirements", "coverage_percentage"]
+                    if all(stat in stats for stat in required_stats):
+                        self.log_test("Traceability Matrix", True, 
+                                    f"Retrieved {len(mappings)} mappings, {stats['coverage_percentage']}% coverage")
+                        return True
+                    else:
+                        self.log_test("Traceability Matrix", False, "Missing statistics fields", stats)
+                        return False
+                else:
+                    self.log_test("Traceability Matrix", False, "Missing mappings or statistics", data)
+                    return False
+            elif response.status_code == 404:
+                self.log_test("Traceability Matrix", False, "No traceability data found - run comprehensive analysis first")
+                return False
+            else:
+                self.log_test("Traceability Matrix", False, f"HTTP {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_test("Traceability Matrix", False, f"Request error: {str(e)}")
+            return False
+
+    def test_health_metrics(self) -> bool:
+        """Test health metrics endpoint"""
+        if not self.session_id:
+            self.log_test("Health Metrics", False, "No session_id available")
+            return False
+        
+        try:
+            response = requests.get(f"{API_BASE}/ai/health-metrics/{self.session_id}", timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "metrics" in data and "summary" in data:
+                    metrics = data["metrics"]
+                    summary = data["summary"]
+                    
+                    # Validate summary structure
+                    required_summary = ["total_files", "average_complexity", "overall_health_grade"]
+                    if all(field in summary for field in required_summary):
+                        self.log_test("Health Metrics", True, 
+                                    f"Health analysis: {len(metrics)} files, Grade: {summary['overall_health_grade']}")
+                        return True
+                    else:
+                        self.log_test("Health Metrics", False, "Missing summary fields", summary)
+                        return False
+                else:
+                    self.log_test("Health Metrics", False, "Missing metrics or summary", data)
+                    return False
+            elif response.status_code == 404:
+                self.log_test("Health Metrics", False, "No health metrics found - run comprehensive analysis first")
+                return False
+            else:
+                self.log_test("Health Metrics", False, f"HTTP {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_test("Health Metrics", False, f"Request error: {str(e)}")
+            return False
+
+    def test_chat_assistant(self) -> bool:
+        """Test chat assistant with context"""
+        if not self.session_id:
+            self.log_test("Chat Assistant", False, "No session_id available")
+            return False
+        
+        try:
+            # Test chat with a relevant question
+            test_message = "What are the main issues found in the uploaded code files?"
+            
+            response = requests.post(
+                f"{API_BASE}/ai/chat",
+                params={"session_id": self.session_id, "message": test_message},
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "response" in data and "conversation_id" in data:
+                    ai_response = data["response"]
+                    conversation_id = data["conversation_id"]
+                    
+                    # Check if response is meaningful (not empty and reasonable length)
+                    if len(ai_response.strip()) > 20:
+                        self.log_test("Chat Assistant", True, 
+                                    f"Chat response received (ID: {conversation_id})")
+                        return True
+                    else:
+                        self.log_test("Chat Assistant", False, "Response too short or empty", ai_response)
+                        return False
+                else:
+                    self.log_test("Chat Assistant", False, "Missing response or conversation_id", data)
+                    return False
+            else:
+                self.log_test("Chat Assistant", False, f"HTTP {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_test("Chat Assistant", False, f"Request error: {str(e)}")
+            return False
+
+    def test_comprehensive_report(self) -> bool:
+        """Test comprehensive report generation"""
+        if not self.session_id:
+            self.log_test("Comprehensive Report", False, "No session_id available")
+            return False
+        
+        try:
+            response = requests.post(
+                f"{API_BASE}/ai/comprehensive-report",
+                params={
+                    "session_id": self.session_id,
+                    "include_traceability": True,
+                    "include_health_metrics": True,
+                    "format_type": "json"
+                },
+                timeout=90
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "report" in data and "generated_at" in data:
+                    report = data["report"]
+                    
+                    # Validate report structure
+                    required_fields = ["executive_summary", "detailed_findings", "recommendations"]
+                    if all(field in report for field in required_fields):
+                        self.log_test("Comprehensive Report", True, 
+                                    f"Report generated successfully at {data['generated_at']}")
+                        return True
+                    else:
+                        self.log_test("Comprehensive Report", False, "Missing report fields", report.keys())
+                        return False
+                else:
+                    self.log_test("Comprehensive Report", False, "Missing report or timestamp", data)
+                    return False
+            elif response.status_code == 404:
+                self.log_test("Comprehensive Report", False, "No comprehensive analysis found - run analysis first")
+                return False
+            else:
+                self.log_test("Comprehensive Report", False, f"HTTP {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_test("Comprehensive Report", False, f"Request error: {str(e)}")
+            return False
+
+    def test_ai_dashboard(self) -> bool:
+        """Test AI dashboard endpoint"""
+        if not self.session_id:
+            self.log_test("AI Dashboard", False, "No session_id available")
+            return False
+        
+        try:
+            response = requests.get(f"{API_BASE}/ai/dashboard/{self.session_id}", timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Validate dashboard structure
+                required_sections = ["session_info", "analysis_summary", "traceability_stats", "health_overview"]
+                if all(section in data for section in required_sections):
+                    session_info = data["session_info"]
+                    traceability_stats = data["traceability_stats"]
+                    
+                    if "id" in session_info and session_info["id"] == self.session_id:
+                        self.log_test("AI Dashboard", True, 
+                                    f"Dashboard loaded: {traceability_stats.get('total_mappings', 0)} mappings")
+                        return True
+                    else:
+                        self.log_test("AI Dashboard", False, "Session ID mismatch in dashboard")
+                        return False
+                else:
+                    self.log_test("AI Dashboard", False, "Missing dashboard sections", data.keys())
+                    return False
+            elif response.status_code == 404:
+                self.log_test("AI Dashboard", False, "Session not found")
+                return False
+            else:
+                self.log_test("AI Dashboard", False, f"HTTP {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_test("AI Dashboard", False, f"Request error: {str(e)}")
+            return False
+
+    def test_code_suggestions(self) -> bool:
+        """Test code suggestions endpoint"""
+        if not self.session_id:
+            self.log_test("Code Suggestions", False, "No session_id available")
+            return False
+        
+        try:
+            # Test with a simple code snippet
+            test_code = "def fibonacci(n):\n    if n <= 1:\n        return n\n    # cursor here"
+            
+            response = requests.post(
+                f"{API_BASE}/ai/code-suggestions",
+                params={
+                    "session_id": self.session_id,
+                    "file_name": "test.py",
+                    "code_snippet": test_code,
+                    "cursor_position": len(test_code)
+                },
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "suggestions" in data and "context" in data:
+                    suggestions = data["suggestions"]
+                    context = data["context"]
+                    
+                    # Check if we got meaningful suggestions
+                    if isinstance(suggestions, list):
+                        self.log_test("Code Suggestions", True, 
+                                    f"Received {len(suggestions)} code suggestions")
+                        return True
+                    else:
+                        self.log_test("Code Suggestions", False, "Invalid suggestions format", suggestions)
+                        return False
+                else:
+                    self.log_test("Code Suggestions", False, "Missing suggestions or context", data)
+                    return False
+            else:
+                self.log_test("Code Suggestions", False, f"HTTP {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_test("Code Suggestions", False, f"Request error: {str(e)}")
+            return False
     
     def run_all_tests(self):
         """Run all backend tests in sequence"""
