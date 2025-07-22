@@ -192,3 +192,109 @@ class ReportGenerationRequest(BaseModel):
 class ReportResponse(BaseModel):
     report_data: Dict[str, Any]
     download_url: Optional[str] = None
+
+
+# Advanced AI Features Models
+
+class TraceabilityMapping(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    requirement_id: str
+    requirement_text: str
+    code_element: str
+    file_path: str
+    line_number: int
+    confidence_score: float
+    element_type: str  # function, class, method, variable
+    session_id: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class HealthMetric(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    file_path: str
+    complexity_score: int
+    maintainability_index: float
+    test_coverage: float
+    code_duplication: int
+    security_risk_level: str
+    performance_issues: int
+    session_id: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ChatMessage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    session_id: str
+    message: str
+    response: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    context_data: Optional[Dict[str, Any]] = None
+
+
+class ChatContext(BaseModel):
+    session_id: str
+    conversation_history: List[Dict[str, str]] = []
+    uploaded_files: List[str] = []
+    analysis_results: Optional[Dict] = None
+    user_preferences: Dict[str, Any] = {}
+    last_updated: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ComprehensiveReport(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    session_id: str
+    executive_summary: str
+    detailed_findings: str
+    recommendations: str
+    compliance_status: str
+    traceability_coverage: int
+    health_overview: Dict[str, Any]
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    report_type: str = "comprehensive"
+
+
+# Request/Response Models for Advanced Features
+
+class TraceabilityRequest(BaseModel):
+    session_id: str
+    model: str = "gpt-4o"
+
+
+class TraceabilityResponse(BaseModel):
+    mappings: List[TraceabilityMapping]
+    coverage_percentage: float
+    message: str
+
+
+class HealthAnalysisRequest(BaseModel):
+    session_id: str
+    model: str = "gpt-4o"
+
+
+class HealthAnalysisResponse(BaseModel):
+    metrics: List[HealthMetric]
+    overall_score: float
+    message: str
+
+
+class ChatRequest(BaseModel):
+    session_id: str
+    message: str
+
+
+class ChatResponse(BaseModel):
+    response: str
+    conversation_id: str
+
+
+class EnhancedReportRequest(BaseModel):
+    session_id: str
+    include_traceability: bool = True
+    include_health_metrics: bool = True
+    format_type: str = "json"  # json, pdf, excel
+
+
+class EnhancedReportResponse(BaseModel):
+    report: ComprehensiveReport
+    download_url: Optional[str] = None
+    format_type: str
